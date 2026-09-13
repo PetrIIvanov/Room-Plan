@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Дебаг координат Three.js - ИСПРАВЛЕНО</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        #canvas-container {
+            width: 800px;
+            height: 600px;
+            border: 2px solid #333;
+            background: white;
+        }
+        .info-panel {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .axis-info {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .axis-x { background: #ffebee; }
+        .axis-y { background: #e8f5e9; }
+        .axis-z { background: #e3f2fd; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Дебаг координат Three.js - ИСПРАВЛЕННАЯ ВЕРСИЯ</h1>
+    
+    <div class="container">
+        <div id="canvas-container"></div>
+        
+        <div class="info-panel">
+            <h2>Координатная система Three.js</h2>
+            
+            <div class="axis-info axis-x">
+                <strong>Ось X (красная)</strong><br>
+                Направление: вправо<br>
+                Диапазон: 0 → 247 см
+            </div>
+            
+            <div class="axis-info axis-y">
+                <strong>Ось Y (зеленая)</strong><br>
+                Направление: вверх<br>
+                Диапазон: 0 → 222 см
+            </div>
+            
+            <div class="axis-info axis-z">
+                <strong>Ось Z (синяя)</strong><br>
+                Направление: на зрителя<br>
+                Диапазон: 0 → 153 см
+            </div>
+            
+            <h3>Стены (исправлено):</h3>
+            <ul>
+                <li><strong>Пол</strong>: BoxGeometry(247, 1, 153), position(123.5, 0, 76.5)</li>
+                <li><strong>Правая стена</strong>: BoxGeometry(1, 222, 153), position(247, 111, 76.5)</li>
+                <li><strong>Задняя стена</strong>: BoxGeometry(247, 222, 1), position(123.5, 111, 153)</li>
+            </ul>
+            
+            <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                <strong>Управление:</strong><br>
+                🖱️ Левая кнопка — вращение<br>
+                ️ Правая кнопка — перемещение<br>
+                🖱️ Колёсико — zoom
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
+
+        const camera = new THREE.PerspectiveCamera(
+            60,
+            container.clientWidth / container.clientHeight,
+            0.1,
+            10000
+        );
+        camera.position.set(400, 300, 400);
+        camera.lookAt(100, 100, 75);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(200, 300, 200);
+        scene.add(dirLight);
+
+        // ========== ОСИ КООРДИНАТ ==========
+        const axisLength = 300;
+        
+        const xGeometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(axisLength, 0, 0)
+        ]);
+        const xLine = new THREE.Line(xGeometry, new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3 }));
+        scene.add(xLine);
+        
+        const xCone = new THREE.Mesh(
+            new THREE.ConeGeometry(5, 20, 8),
+            new THREE.MeshBasicMaterial({ color: 0xff0000 })
+        );
+        xCone.position.set(axisLength, 0, 0);
+        xCone.rotation.z = -Math.PI / 2;
+        scene.add(xCone);
+
+        const yGeometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0, axisLength, 0)
+        ]);
+        const yLine = new THREE.Line(yGeometry, new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 3 }));
+        scene.add(yLine);
+        
+        const yCone = new THREE.Mesh(
+            new THREE.ConeGeometry(5, 20, 8),
+            new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+        );
+        yCone.position.set(0, axisLength, 0);
+        scene.add(yCone);
+
+        const zGeometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0, 0, axisLength)
+        ]);
+        const zLine = new THREE.Line(zGeometry, new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 3 }));
+        scene.add(zLine);
+        
+        const zCone = new THREE.Mesh(
+            new THREE.ConeGeometry(5, 20, 8),
+            new THREE.MeshBasicMaterial({ color: 0x0000ff })
+        );
+        zCone.position.set(0, 0, axisLength);
+        zCone.rotation.x = Math.PI / 2;
+        scene.add(zCone);
+
+        // ========== ПОДПИСИ ОСЕЙ ==========
+        function createTextSprite(text, position, color) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 128;
+            context.fillStyle = color;
+            context.font = 'bold 60px Arial';
+            context.fillText(text, 10, 80);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(material);
+            sprite.position.copy(position);
+            sprite.scale.set(80, 40, 1);
+            return sprite;
+        }
+
+        scene.add(createTextSprite('X', new THREE.Vector3(axisLength + 30, 0, 0), 'red'));
+        scene.add(createTextSprite('Y', new THREE.Vector3(0, axisLength + 30, 0), 'green'));
+        scene.add(createTextSprite('Z', new THREE.Vector3(0, 0, axisLength + 30), 'blue'));
+
+        // ========== ИСПРАВЛЕННЫЕ СТЕНЫ ==========
+        
+        // Пол: BoxGeometry(247, 1, 153), position(123.5, 0, 76.5)
+        const floorGeometry = new THREE.BoxGeometry(247, 1, 153);
+        const floorMaterial = new THREE.MeshLambertMaterial({ 
+            color: 0xd3d3d3, 
+            transparent: true, 
+            opacity: 0.5 
+        });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.position.set(123.5, 0, 76.5);
+        scene.add(floor);
+        scene.add(createTextSprite('Пол', new THREE.Vector3(123.5, 10, 76.5), 'black'));
+
+        // Правая стена: BoxGeometry(1, 222, 153), position(247, 111, 76.5)
+        const rightWallGeometry = new THREE.BoxGeometry(1, 222, 153);
+        const rightWallMaterial = new THREE.MeshLambertMaterial({ 
+            color: 0xadd8e6, 
+            transparent: true, 
+            opacity: 0.5 
+        });
+        const rightWall = new THREE.Mesh(rightWallGeometry, rightWallMaterial);
+        rightWall.position.set(247, 111.0, 76.5);
+        scene.add(rightWall);
+        scene.add(createTextSprite('Правая', new THREE.Vector3(247 + 40, 111.0, 76.5), 'blue'));
+
+        // Задняя стена: BoxGeometry(247, 222, 1), position(123.5, 111, 153)
+        const backWallGeometry = new THREE.BoxGeometry(247, 222, 1);
+        const backWallMaterial = new THREE.MeshLambertMaterial({ 
+            color: 0x90ee90, 
+            transparent: true, 
+            opacity: 0.5 
+        });
+        const backWall = new THREE.Mesh(backWallGeometry, backWallMaterial);
+        backWall.position.set(123.5, 111.0, 153);
+        scene.add(backWall);
+        scene.add(createTextSprite('Задняя', new THREE.Vector3(123.5, 111.0, 153 + 40), 'green'));
+
+        // ========== КООРДИНАТНЫЕ МЕТКИ ==========
+        
+        // Углы пола
+        const corners = [
+            [0, 0, 0],
+            [247, 0, 0],
+            [247, 0, 153],
+            [0, 0, 153]
+        ];
+        
+        corners.forEach((corner) => {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(5, 16, 16),
+                new THREE.MeshBasicMaterial({ color: 0xff0000 })
+            );
+            sphere.position.set(corner[0], corner[1], corner[2]);
+            scene.add(sphere);
+            
+            scene.add(createTextSprite(
+                '(' + corner[0] + ',' + corner[1] + ',' + corner[2] + ')',
+                new THREE.Vector3(corner[0], corner[1] + 15, corner[2]),
+                'red'
+            ));
+        });
+
+        // Углы потолка
+        const topCorners = [
+            [0, 222, 0],
+            [247, 222, 0],
+            [247, 222, 153],
+            [0, 222, 153]
+        ];
+        
+        topCorners.forEach((corner) => {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(5, 16, 16),
+                new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+            );
+            sphere.position.set(corner[0], corner[1], corner[2]);
+            scene.add(sphere);
+            
+            scene.add(createTextSprite(
+                '(' + corner[0] + ',' + corner[1] + ',' + corner[2] + ')',
+                new THREE.Vector3(corner[0], corner[1] + 15, corner[2]),
+                'green'
+            ));
+        });
+
+        // Сетка на полу
+        const gridHelper = new THREE.GridHelper(247, 10, 0x888888, 0xcccccc);
+        gridHelper.position.set(123.5, 0.5, 76.5);
+        scene.add(gridHelper);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

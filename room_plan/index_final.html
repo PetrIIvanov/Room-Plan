@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>План комнаты - Интерактивная 3D модель</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        #canvas-container { width: 100%; height: 700px; border: 2px solid #333; border-radius: 4px; margin: 20px 0; }
+        .controls-info { background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .info { background: #e8f4f8; padding: 15px; border-radius: 4px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Интерактивная 3D модель комнаты</h1>
+        
+        <div class="info">
+            <h3>Характеристики:</h3>
+            <ul>
+                <li>Размеры: 247 × 153 × 222 см</li>
+                <li>Площадь: 3.78 м²</li>
+                <li>Стены: 8 см</li>
+            </ul>
+        </div>
+
+        <div class="controls-info">
+            <strong>Управление:</strong><br>
+            🖱️ Левая кнопка — вращение | Правая кнопка — перемещение | Колёсико — zoom
+        </div>
+        
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf5f5f5);
+
+        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 10000);
+        camera.position.set(400, 300, 400);
+        camera.lookAt(100, 100, 75);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(200, 300, 200);
+        scene.add(dirLight);
+
+        // ПРАВИЛЬНАЯ ФУНКЦИЯ СОЗДАНИЯ КОРОБКИ
+        function createBox(x, y, z, w, h, d, material) {
+            const geometry = new THREE.BoxGeometry(w, h, d);
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x + w/2, y + h/2, z + d/2);
+            return mesh;
+        }
+
+        // Материалы
+        const materials = {
+            floor: new THREE.MeshLambertMaterial({ color: 0xd3d3d3, transparent: true, opacity: 0.5 }),
+            ceiling: new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 }),
+            rightWall: new THREE.MeshLambertMaterial({ color: 0xadd8e6, transparent: true, opacity: 0.5 }),
+            topWall: new THREE.MeshLambertMaterial({ color: 0x90ee90, transparent: true, opacity: 0.5 }),
+            bottomWall: new THREE.MeshLambertMaterial({ color: 0xffffe0, transparent: true, opacity: 0.5 }),
+            leftWall: new THREE.MeshLambertMaterial({ color: 0xffb6c1, transparent: true, opacity: 0.5 }),
+            door: new THREE.MeshLambertMaterial({ color: 0x8b4513, transparent: true, opacity: 0.8 }),
+            bikes: new THREE.MeshLambertMaterial({ color: 0xc0c0c0, transparent: true, opacity: 0.7 }),
+            shelves: new THREE.MeshLambertMaterial({ color: 0xf5deb3, transparent: true, opacity: 0.7 }),
+            pipes: new THREE.MeshLambertMaterial({ color: 0xff6347, transparent: true, opacity: 0.6 }),
+        };
+
+        // Пол: Y=0
+        scene.add(createBox(0, 0, 0, 247, 0.1, 153, materials.floor));
+
+        // Потолок: Y=222
+        scene.add(createBox(0, 222, 0, 247, 0.1, 153, materials.ceiling));
+
+        // Правая стена: X=247, толщина 8 по X
+        scene.add(createBox(247, 0, 0, 8, 222, 153, materials.rightWall));
+
+        // Задняя стена: Z=153, толщина 8 по Z
+        scene.add(createBox(0, 0, 153, 247, 222, 8, materials.topWall));
+
+        // Передняя стена: Z=0, толщина 8 по Z
+        scene.add(createBox(0, 0, 0, 247, 222, 8, materials.bottomWall));
+
+        // Левая стена: X=0, толщина 8 по X
+        scene.add(createBox(0, 0, 0, 8, 222, 153, materials.leftWall));
+
+        // Дверь закрыта: X=-8, Y=34, толщина 4 по X
+        scene.add(createBox(-10, 34, 0, 4, 222, 75, materials.door));
+
+        // Велосипеды: X=67, Y=0, Z=0
+        scene.add(createBox(67, 0, 0, 180, 106, 88, materials.bikes));
+
+        // Полки: X=7, Y=0, Z=113
+        scene.add(createBox(7, 0, 113, 240, 180, 40, materials.shelves));
+
+        // Трубы: X=220, Y=0, Z=135
+        scene.add(createBox(220, 0, 135, 27, 222, 18, materials.pipes));
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
