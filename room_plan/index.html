@@ -7,104 +7,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f0f0f0;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .images {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        .image-box {
-            text-align: center;
-            padding: 10px;
-            background: #fafafa;
-            border-radius: 4px;
-        }
-        .image-box img {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .image-box img:hover {
-            transform: scale(1.02);
-        }
-        #canvas-container {
-            width: 100%;
-            height: 700px;
-            border: 2px solid #333;
-            border-radius: 4px;
-            margin: 20px 0;
-        }
-        .info {
-            background: #e8f4f8;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 20px 0;
-        }
-        .controls-info {
-            background: #fff3cd;
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-        
-        /* Lightbox стили */
-        .lightbox {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            cursor: pointer;
-        }
-        .lightbox-content {
-            margin: auto;
-            display: block;
-            max-width: 95%;
-            max-height: 95%;
-            object-fit: contain;
-        }
-        .lightbox-close {
-            position: absolute;
-            top: 20px;
-            right: 40px;
-            color: #fff;
-            font-size: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 10000;
-        }
-        .lightbox-close:hover {
-            color: #bbb;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+        h1 { text-align: center; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .images { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin: 20px 0; }
+        .image-box { text-align: center; padding: 10px; background: #fafafa; border-radius: 4px; }
+        .image-box img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: transform 0.2s; }
+        .image-box img:hover { transform: scale(1.02); }
+        #canvas-container { width: 100%; height: 700px; border: 2px solid #333; border-radius: 4px; margin: 20px 0; }
+        .info { background: #e8f4f8; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        .controls-info { background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .lightbox { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); cursor: pointer; }
+        .lightbox-content { margin: auto; display: block; max-width: 95%; max-height: 95%; object-fit: contain; }
+        .lightbox-close { position: absolute; top: 20px; right: 40px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10000; }
+        .lightbox-close:hover { color: #bbb; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏠 План комнаты</h1>
+        <h1> План комнаты</h1>
         
         <div class="info">
             <h3>Характеристики помещения:</h3>
@@ -118,7 +39,7 @@
             </ul>
         </div>
 
-        <h2>📐 Статичные изображения (кликните для увеличения)</h2>
+        <h2> Статичные изображения (кликните для увеличения)</h2>
         <div class="images">
             <div class="image-box">
                 <img src="2d_plan.png" alt="2D План" onclick="openLightbox(this.src)">
@@ -139,7 +60,7 @@
             <strong>Управление:</strong><br>
             🖱️ <b>Левая кнопка мыши</b> — вращение камеры<br>
             🖱️ <b>Правая кнопка мыши</b> — перемещение<br>
-            🖱️ <b>Колёсико</b> — приближение/удаление
+            ️ <b>Колёсико</b> — приближение/удаление
         </div>
         <div id="canvas-container"></div>
 
@@ -149,14 +70,12 @@
         </div>
     </div>
 
-    <!-- Lightbox -->
     <div id="lightbox" class="lightbox" onclick="closeLightbox()">
         <span class="lightbox-close">&times;</span>
         <img class="lightbox-content" id="lightbox-img">
     </div>
 
     <script>
-        // Lightbox функции
         function openLightbox(src) {
             document.getElementById('lightbox').style.display = 'block';
             document.getElementById('lightbox-img').src = src;
@@ -166,38 +85,29 @@
             document.getElementById('lightbox').style.display = 'none';
         }
 
-        // Закрытие по Escape
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeLightbox();
             }
         });
 
-        // Инициализация Three.js
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xf5f5f5);
 
-        const camera = new THREE.PerspectiveCamera(
-            60,
-            container.clientWidth / container.clientHeight,
-            0.1,
-            10000
-        );
-        camera.position.set(300, 300, 300);
-        camera.up.set(0, 0, 1);  // Z вверх как в matplotlib
+        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 10000);
+        camera.position.set(400, 300, 400);
+        camera.lookAt(100, 100, 75);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.shadowMap.enabled = true;
         container.appendChild(renderer.domElement);
 
-        // Контролы
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
 
-        // Освещение
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambientLight);
 
@@ -206,7 +116,6 @@
         directionalLight.castShadow = true;
         scene.add(directionalLight);
 
-        // Материалы
         const materials = {
             floor: new THREE.MeshLambertMaterial({ color: 0xd3d3d3, transparent: true, opacity: 0.5 }),
             ceiling: new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 }),
@@ -215,67 +124,72 @@
             bottomWall: new THREE.MeshLambertMaterial({ color: 0xffffe0, transparent: true, opacity: 0.5 }),
             leftWall: new THREE.MeshLambertMaterial({ color: 0xffb6c1, transparent: true, opacity: 0.5 }),
             door: new THREE.MeshLambertMaterial({ color: 0x8b4513, transparent: true, opacity: 0.8 }),
-            doorOpen: new THREE.MeshLambertMaterial({ color: 0x8b4513, transparent: true, opacity: 0.4 }),
             bikes: new THREE.MeshLambertMaterial({ color: 0xc0c0c0, transparent: true, opacity: 0.7 }),
             shelves: new THREE.MeshLambertMaterial({ color: 0xf5deb3, transparent: true, opacity: 0.7 }),
             pipes: new THREE.MeshLambertMaterial({ color: 0xff6347, transparent: true, opacity: 0.6 }),
         };
 
-        // Функция создания коробки
-        function createBox(x, y, z, w, h, d, material) {
+        // ФУНКЦИЯ СОЗДАНИЯ КОРОБКИ С ИНВЕРСИЕЙ Z
+        function createBox(x, y_mpl, z_mpl, w, h, d, material) {
             const geometry = new THREE.BoxGeometry(w, h, d);
             const mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(x + w/2, z + d/2, y + h/2);  // Исправлено: X, Z, Y
+            const z_three = 153 - z_mpl - d;
+            mesh.position.set(x + w/2, y_mpl + h/2, z_three + d/2);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             return mesh;
         }
 
-        // Пол (Y=0 в matplotlib → Y=0 в Three.js, но Z=0 в matplotlib → Y=0 в Three.js)
-        scene.add(createBox(0, 0, 0, 247, 153, 0.1, materials.floor));
+        // Пол
+        scene.add(createBox(0, 0, 0, 247, 0.1, 153, materials.floor));
 
-        // Потолок (Z=222 в matplotlib → Y=222 в Three.js)
-        scene.add(createBox(0, 0, 222, 247, 153, 0.1, materials.ceiling));
+        // Потолок
+        scene.add(createBox(0, 222, 0, 247, 0.1, 153, materials.ceiling));
 
-        // Правая стена (X=247 в matplotlib → X=247 в Three.js)
-        scene.add(createBox(247, 0, 0, 8, 153, 222, materials.rightWall));
+        // Правая стена
+        scene.add(createBox(247, 0, 0, 8, 222, 153, materials.rightWall));
 
-        // Верхняя стена (Y=153 в matplotlib → Z=153 в Three.js)
-        scene.add(createBox(0, 153, 0, 247, 8, 222, materials.topWall));
+        // Задняя стена
+        scene.add(createBox(0, 0, 153, 247, 222, 8, materials.topWall));
 
-        // Нижняя стена (Y=0 в matplotlib → Z=0 в Three.js)
-        scene.add(createBox(0, 0, 0, 247, 8, 222, materials.bottomWall));
+        // Передняя стена
+        scene.add(createBox(0, 0, 0, 247, 222, 8, materials.bottomWall));
 
-        // Левая стена (X=0 в matplotlib → X=0 в Three.js)
-        scene.add(createBox(0, 0, 0, 8, 153, 222, materials.leftWall));
+        // ЛЕВАЯ СТЕНА С ПРОЁМОМ (2 части)
+        // Нижняя часть: от Z=0 до Z=34
+        scene.add(createBox(0, 0, 0, 8, 222, 34, materials.leftWall));
 
-        // Дверь ЗАКРЫТА (в плоскости X=-8)
-        const doorClosed = createBox(-10.0, 34, 0, 
-                                     4, 75, 222, materials.door);
-        scene.add(doorClosed);
+        // Верхняя часть: от Z=109 до Z=153
+        scene.add(createBox(0, 0, 109, 8, 222, 44, materials.leftWall));
 
-        // Дверь ОТКРЫТА
-        const doorOpen = createBox(-8, 32.0, 0, 
-                                   75, 4, 222, materials.doorOpen);
-        scene.add(doorOpen);
+        // ДВЕРЬ ОТКРЫТА (от X=-8 до X=67, центрирована на Y=34, толщина 4)
+        scene.add(createBox(-8, 0, 32.0, 
+                           75, 222, 4, materials.door));
+
+        // Петли (красная точка)
+        const hingeZ_three = 153 - 34;
+        const hingeMarker = new THREE.Mesh(
+            new THREE.SphereGeometry(5, 16, 16),
+            new THREE.MeshBasicMaterial({ color: 0xff0000 })
+        );
+        hingeMarker.position.set(-8, 111.0, hingeZ_three);
+        scene.add(hingeMarker);
 
         // Велосипеды
-        scene.add(createBox(67, 0, 0, 180, 88, 106, materials.bikes));
+        scene.add(createBox(67, 0, 0, 180, 106, 88, materials.bikes));
 
         // Полки
-        scene.add(createBox(7, 113, 0, 240, 40, 180, materials.shelves));
+        scene.add(createBox(7, 0, 113, 240, 180, 40, materials.shelves));
 
         // Трубы
-        scene.add(createBox(220, 135, 0, 27, 18, 222, materials.pipes));
+        scene.add(createBox(220, 0, 135, 27, 222, 18, materials.pipes));
 
-        // Анимация
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
             renderer.render(scene, camera);
         }
 
-        // Адаптация размера
         window.addEventListener('resize', () => {
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();

@@ -5,86 +5,50 @@ os.makedirs('room_plan', exist_ok=True)
 room_width = 247
 room_height = 153
 ceiling_height = 222
+wall_thickness = 8
+
+door_gap_bottom = 34
+door_gap_top = 44
+door_width = 75
+door_leaf = 75
+door_thickness = 4
+
+hinge_x = -8
+hinge_y = 34
 
 debug_html = """<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Дебаг координат Three.js - ИСПРАВЛЕНО</title>
+    <title>Дебаг - Дверь от петли</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f0f0f0;
-        }
-        .container {
-            display: flex;
-            gap: 20px;
-        }
-        #canvas-container {
-            width: 800px;
-            height: 600px;
-            border: 2px solid #333;
-            background: white;
-        }
-        .info-panel {
-            flex: 1;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .axis-info {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .axis-x { background: #ffebee; }
-        .axis-y { background: #e8f5e9; }
-        .axis-z { background: #e3f2fd; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+        .container { display: flex; gap: 20px; }
+        #canvas-container { width: 800px; height: 600px; border: 2px solid #333; background: white; }
+        .info-panel { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-    <h1>🔍 Дебаг координат Three.js - ИСПРАВЛЕННАЯ ВЕРСИЯ</h1>
+    <h1>🔍 Дебаг - Дверь начинается от петли</h1>
     
     <div class="container">
         <div id="canvas-container"></div>
         
         <div class="info-panel">
-            <h2>Координатная система Three.js</h2>
-            
-            <div class="axis-info axis-x">
-                <strong>Ось X (красная)</strong><br>
-                Направление: вправо<br>
-                Диапазон: 0 → """ + str(room_width) + """ см
-            </div>
-            
-            <div class="axis-info axis-y">
-                <strong>Ось Y (зеленая)</strong><br>
-                Направление: вверх<br>
-                Диапазон: 0 → """ + str(ceiling_height) + """ см
-            </div>
-            
-            <div class="axis-info axis-z">
-                <strong>Ось Z (синяя)</strong><br>
-                Направление: на зрителя<br>
-                Диапазон: 0 → """ + str(room_height) + """ см
-            </div>
-            
-            <h3>Стены (исправлено):</h3>
+            <h2>Параметры двери:</h2>
             <ul>
-                <li><strong>Пол</strong>: BoxGeometry(247, 1, 153), position(123.5, 0, 76.5)</li>
-                <li><strong>Правая стена</strong>: BoxGeometry(1, 222, 153), position(247, 111, 76.5)</li>
-                <li><strong>Задняя стена</strong>: BoxGeometry(247, 222, 1), position(123.5, 111, 153)</li>
+                <li>Проём: от Z=34 до Z=109 (75 см)</li>
+                <li>Петли: X=-8, Z=34</li>
+                <li>Дверь открыта: от X=-8 до X=67</li>
+                <li>Дверь НЕ центрирована, начинается от петли!</li>
             </ul>
             
             <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-radius: 4px;">
                 <strong>Управление:</strong><br>
                 🖱️ Левая кнопка — вращение<br>
-                ️ Правая кнопка — перемещение<br>
+                🖱️ Правая кнопка — перемещение<br>
                 🖱️ Колёсико — zoom
             </div>
         </div>
@@ -95,14 +59,9 @@ debug_html = """<!DOCTYPE html>
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xffffff);
 
-        const camera = new THREE.PerspectiveCamera(
-            60,
-            container.clientWidth / container.clientHeight,
-            0.1,
-            10000
-        );
-        camera.position.set(400, 300, 400);
-        camera.lookAt(100, 100, 75);
+        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 10000);
+        camera.position.set(300, 200, 300);
+        camera.lookAt(0, 100, 75);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
@@ -116,61 +75,98 @@ debug_html = """<!DOCTYPE html>
         dirLight.position.set(200, 300, 200);
         scene.add(dirLight);
 
-        // ========== ОСИ КООРДИНАТ ==========
-        const axisLength = 300;
+        // Функция создания коробки
+        function createBox(x, y_mpl, z_mpl, w, h, d, material) {
+            const geometry = new THREE.BoxGeometry(w, h, d);
+            const mesh = new THREE.Mesh(geometry, material);
+            const z_three = """ + str(room_height) + """ - z_mpl - d;
+            mesh.position.set(x + w/2, y_mpl + h/2, z_three + d/2);
+            return mesh;
+        }
+
+        // Материалы
+        const wallMaterial = new THREE.MeshLambertMaterial({ color: 0xffb6c1, transparent: true, opacity: 0.5 });
+        const doorMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513, transparent: true, opacity: 0.8 });
+
+        // Пол
+        scene.add(createBox(0, 0, 0, """ + str(room_width) + """, 0.1, """ + str(room_height) + """, 
+            new THREE.MeshLambertMaterial({ color: 0xd3d3d3, transparent: true, opacity: 0.3 })));
+
+        // Потолок
+        scene.add(createBox(0, """ + str(ceiling_height) + """, 0, """ + str(room_width) + """, 0.1, """ + str(room_height) + """,
+            new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 })));
+
+        // Правая стена
+        scene.add(createBox(""" + str(room_width) + """, 0, 0, """ + str(wall_thickness) + """, """ + str(ceiling_height) + """, """ + str(room_height) + """, wallMaterial));
+
+        // Задняя стена
+        scene.add(createBox(0, 0, """ + str(room_height) + """, """ + str(room_width) + """, """ + str(ceiling_height) + """, """ + str(wall_thickness) + """, wallMaterial));
+
+        // Передняя стена
+        scene.add(createBox(0, 0, 0, """ + str(room_width) + """, """ + str(ceiling_height) + """, """ + str(wall_thickness) + """, wallMaterial));
+
+        // ЛЕВАЯ СТЕНА С ПРОЁМОМ (разбита на 2 части)
         
-        const xGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(axisLength, 0, 0)
-        ]);
-        const xLine = new THREE.Line(xGeometry, new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3 }));
-        scene.add(xLine);
+        // Нижняя часть: от Z=0 до Z=34
+        scene.add(createBox(0, 0, 0, """ + str(wall_thickness) + """, """ + str(ceiling_height) + """, """ + str(door_gap_bottom) + """, wallMaterial));
+
+        // Верхняя часть: от Z=109 до Z=153
+        const upperZ = """ + str(door_gap_bottom + door_width) + """;
+        const upperHeight = """ + str(room_height) + """ - upperZ;
+        scene.add(createBox(0, 0, upperZ, """ + str(wall_thickness) + """, """ + str(ceiling_height) + """, upperHeight, wallMaterial));
+
+        // ДВЕРЬ В ОТКРЫТОМ СОСТОЯНИИ - НАЧИНАЕТСЯ ОТ ПЕТЛИ
+        // Петли: X=-8, Z=34 (в matplotlib)
+        // Дверь идёт от X=-8 до X=67 (75 см вглубь комнаты)
+        // По Y: от 0 до 222
+        // По Z: центрирована на 34, толщина 4 см (от 32 до 36)
         
-        const xCone = new THREE.Mesh(
-            new THREE.ConeGeometry(5, 20, 8),
+        // В Three.js координатах:
+        // X: от -8 до 67, центр в 29.5, ширина 75
+        // Y: от 0 до 222, центр в 111, высота 222
+        // Z: от 32 до 36, центр в 34, глубина 4
+        
+        const doorX_start = """ + str(hinge_x) + """;  // -8
+        const doorX_end = """ + str(hinge_x + door_leaf) + """;  // 67
+        const doorX_center = (doorX_start + doorX_end) / 2;  // 29.5
+        const doorX_width = doorX_end - doorX_start;  // 75
+        
+        const doorY_start = 0;
+        const doorY_end = """ + str(ceiling_height) + """;
+        const doorY_center = (doorY_start + doorY_end) / 2;  // 111
+        const doorY_height = doorY_end - doorY_start;  // 222
+        
+        const doorZ_mpl = """ + str(hinge_y) + """;  // 34
+        const doorZ_thickness = """ + str(door_thickness) + """;  // 4
+        const doorZ_start_mpl = doorZ_mpl - doorZ_thickness/2;  // 32
+        const doorZ_end_mpl = doorZ_mpl + doorZ_thickness/2;  // 36
+        
+        // Перевод Z в Three.js
+        const doorZ_three = """ + str(room_height) + """ - doorZ_mpl - doorZ_thickness;  // 115
+        const doorZ_center_three = doorZ_three + doorZ_thickness/2;  // 117
+        
+        const doorGeometry = new THREE.BoxGeometry(doorX_width, doorY_height, doorZ_thickness);
+        const door = new THREE.Mesh(doorGeometry, doorMaterial);
+        door.position.set(doorX_center, doorY_center, doorZ_center_three);
+        scene.add(door);
+
+        // Маркер петель
+        const hingeZ_three = """ + str(room_height) + """ - """ + str(hinge_y) + """;
+        const hingeMarker = new THREE.Mesh(
+            new THREE.SphereGeometry(5, 16, 16),
             new THREE.MeshBasicMaterial({ color: 0xff0000 })
         );
-        xCone.position.set(axisLength, 0, 0);
-        xCone.rotation.z = -Math.PI / 2;
-        scene.add(xCone);
+        hingeMarker.position.set(""" + str(hinge_x) + """, """ + str(ceiling_height/2) + """, hingeZ_three);
+        scene.add(hingeMarker);
 
-        const yGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(0, axisLength, 0)
-        ]);
-        const yLine = new THREE.Line(yGeometry, new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 3 }));
-        scene.add(yLine);
-        
-        const yCone = new THREE.Mesh(
-            new THREE.ConeGeometry(5, 20, 8),
-            new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-        );
-        yCone.position.set(0, axisLength, 0);
-        scene.add(yCone);
-
-        const zGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(0, 0, axisLength)
-        ]);
-        const zLine = new THREE.Line(zGeometry, new THREE.LineBasicMaterial({ color: 0x0000ff, linewidth: 3 }));
-        scene.add(zLine);
-        
-        const zCone = new THREE.Mesh(
-            new THREE.ConeGeometry(5, 20, 8),
-            new THREE.MeshBasicMaterial({ color: 0x0000ff })
-        );
-        zCone.position.set(0, 0, axisLength);
-        zCone.rotation.x = Math.PI / 2;
-        scene.add(zCone);
-
-        // ========== ПОДПИСИ ОСЕЙ ==========
+        // Подписи
         function createTextSprite(text, position, color) {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             canvas.width = 256;
             canvas.height = 128;
             context.fillStyle = color;
-            context.font = 'bold 60px Arial';
+            context.font = 'bold 40px Arial';
             context.fillText(text, 10, 80);
             
             const texture = new THREE.CanvasTexture(canvas);
@@ -181,99 +177,13 @@ debug_html = """<!DOCTYPE html>
             return sprite;
         }
 
-        scene.add(createTextSprite('X', new THREE.Vector3(axisLength + 30, 0, 0), 'red'));
-        scene.add(createTextSprite('Y', new THREE.Vector3(0, axisLength + 30, 0), 'green'));
-        scene.add(createTextSprite('Z', new THREE.Vector3(0, 0, axisLength + 30), 'blue'));
+        scene.add(createTextSprite('Проём', new THREE.Vector3(-30, 100, """ + str(room_height/2) + """), 'red'));
+        scene.add(createTextSprite('Дверь от петли', new THREE.Vector3(30, 150, 30), 'brown'));
+        scene.add(createTextSprite('Петли', new THREE.Vector3(-20, 180, hingeZ_three), 'red'));
 
-        // ========== ИСПРАВЛЕННЫЕ СТЕНЫ ==========
-        
-        // Пол: BoxGeometry(247, 1, 153), position(123.5, 0, 76.5)
-        const floorGeometry = new THREE.BoxGeometry(""" + str(room_width) + """, 1, """ + str(room_height) + """);
-        const floorMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0xd3d3d3, 
-            transparent: true, 
-            opacity: 0.5 
-        });
-        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-        floor.position.set(""" + str(room_width/2) + """, 0, """ + str(room_height/2) + """);
-        scene.add(floor);
-        scene.add(createTextSprite('Пол', new THREE.Vector3(""" + str(room_width/2) + """, 10, """ + str(room_height/2) + """), 'black'));
-
-        // Правая стена: BoxGeometry(1, 222, 153), position(247, 111, 76.5)
-        const rightWallGeometry = new THREE.BoxGeometry(1, """ + str(ceiling_height) + """, """ + str(room_height) + """);
-        const rightWallMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0xadd8e6, 
-            transparent: true, 
-            opacity: 0.5 
-        });
-        const rightWall = new THREE.Mesh(rightWallGeometry, rightWallMaterial);
-        rightWall.position.set(""" + str(room_width) + """, """ + str(ceiling_height/2) + """, """ + str(room_height/2) + """);
-        scene.add(rightWall);
-        scene.add(createTextSprite('Правая', new THREE.Vector3(""" + str(room_width) + """ + 40, """ + str(ceiling_height/2) + """, """ + str(room_height/2) + """), 'blue'));
-
-        // Задняя стена: BoxGeometry(247, 222, 1), position(123.5, 111, 153)
-        const backWallGeometry = new THREE.BoxGeometry(""" + str(room_width) + """, """ + str(ceiling_height) + """, 1);
-        const backWallMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0x90ee90, 
-            transparent: true, 
-            opacity: 0.5 
-        });
-        const backWall = new THREE.Mesh(backWallGeometry, backWallMaterial);
-        backWall.position.set(""" + str(room_width/2) + """, """ + str(ceiling_height/2) + """, """ + str(room_height) + """);
-        scene.add(backWall);
-        scene.add(createTextSprite('Задняя', new THREE.Vector3(""" + str(room_width/2) + """, """ + str(ceiling_height/2) + """, """ + str(room_height) + """ + 40), 'green'));
-
-        // ========== КООРДИНАТНЫЕ МЕТКИ ==========
-        
-        // Углы пола
-        const corners = [
-            [0, 0, 0],
-            [""" + str(room_width) + """, 0, 0],
-            [""" + str(room_width) + """, 0, """ + str(room_height) + """],
-            [0, 0, """ + str(room_height) + """]
-        ];
-        
-        corners.forEach((corner) => {
-            const sphere = new THREE.Mesh(
-                new THREE.SphereGeometry(5, 16, 16),
-                new THREE.MeshBasicMaterial({ color: 0xff0000 })
-            );
-            sphere.position.set(corner[0], corner[1], corner[2]);
-            scene.add(sphere);
-            
-            scene.add(createTextSprite(
-                '(' + corner[0] + ',' + corner[1] + ',' + corner[2] + ')',
-                new THREE.Vector3(corner[0], corner[1] + 15, corner[2]),
-                'red'
-            ));
-        });
-
-        // Углы потолка
-        const topCorners = [
-            [0, """ + str(ceiling_height) + """, 0],
-            [""" + str(room_width) + """, """ + str(ceiling_height) + """, 0],
-            [""" + str(room_width) + """, """ + str(ceiling_height) + """, """ + str(room_height) + """],
-            [0, """ + str(ceiling_height) + """, """ + str(room_height) + """]
-        ];
-        
-        topCorners.forEach((corner) => {
-            const sphere = new THREE.Mesh(
-                new THREE.SphereGeometry(5, 16, 16),
-                new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-            );
-            sphere.position.set(corner[0], corner[1], corner[2]);
-            scene.add(sphere);
-            
-            scene.add(createTextSprite(
-                '(' + corner[0] + ',' + corner[1] + ',' + corner[2] + ')',
-                new THREE.Vector3(corner[0], corner[1] + 15, corner[2]),
-                'green'
-            ));
-        });
-
-        // Сетка на полу
-        const gridHelper = new THREE.GridHelper(""" + str(max(room_width, room_height)) + """, 10, 0x888888, 0xcccccc);
-        gridHelper.position.set(""" + str(room_width/2) + """, 0.5, """ + str(room_height/2) + """);
+        // Сетка
+        const gridHelper = new THREE.GridHelper(300, 10, 0x888888, 0xcccccc);
+        gridHelper.position.set(0, 0.5, """ + str(room_height/2) + """);
         scene.add(gridHelper);
 
         function animate() {
@@ -294,10 +204,10 @@ debug_html = """<!DOCTYPE html>
 </html>
 """
 
-with open('room_plan/debug_coords_v2.html', 'w', encoding='utf-8') as f:
+with open('room_plan/debug_door_v2.html', 'w', encoding='utf-8') as f:
     f.write(debug_html)
 
-print("✅ Создан файл: room_plan/debug_coords_v2.html")
-print("📂 Откройте его в браузере")
-print("🔍 Теперь стены должны быть правильными прямоугольниками!")
+print("✅ Создан файл: room_plan/debug_door_v2.html")
+print(" Откройте его в браузере")
+print("🔍 Теперь дверь начинается от петли (-8) и идёт до X=67")
 print("\n📸 Сделайте скриншот и пришлите!")
